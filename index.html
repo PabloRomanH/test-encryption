@@ -1,0 +1,74 @@
+<html>
+<head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.min.js"></script>
+<script src="tea-block.js"></script>
+<!-- <script src="aes-ctr.js"></script> -->
+<script src="CryptoJS/rollups/aes.js"></script>
+<script src="CryptoJS/rollups/rabbit.js"></script>
+<script src="CryptoJS/rollups/rc4.js"></script>
+<script src="message.js"></script>
+
+<script>
+(function () {
+
+  angular.module('testencryption', [])
+  	.controller('AppController', AppController);
+
+  function AppController() {
+    var vm = this;
+    var time0;
+    var time1;
+	var encrypted;
+	var decrypted;
+
+    encrypted = CryptoJS.AES.encrypt(message, "Secret Passphrase");
+    time0 = (new Date()).getTime();
+    for(var i = 0; i < 20; i++) {
+      decrypted = CryptoJS.AES.decrypt(encrypted, "Secret Passphrase");
+    }
+    time1 = (new Date()).getTime();
+
+    vm.aestime = (time1 - time0) / 20;
+
+	encrypted = CryptoJS.Rabbit.encrypt(message, "Secret Passphrase");
+    time0 = (new Date()).getTime();
+    for(var i = 0; i < 20; i++) {
+      decrypted = CryptoJS.Rabbit.decrypt(encrypted, "Secret Passphrase");
+    }
+    time1 = (new Date()).getTime();
+
+    vm.rabbittime = (time1 - time0) / 20;
+
+	encrypted = Tea.encrypt(message, "Secret Passphrase")
+	time0 = (new Date()).getTime();
+    for(var i = 0; i < 20; i++) {
+		decrypted = Tea.decrypt(encrypted, "Secret Passphrase")
+	}
+	time1 = (new Date()).getTime();
+
+	vm.teatime = (time1 - time0) / 20;
+
+	encrypted = CryptoJS.RC4Drop.encrypt(message, "Secret Passphrase");
+    time0 = (new Date()).getTime();
+    for(var i = 0; i < 20; i++) {
+      decrypted = CryptoJS.RC4Drop.decrypt(encrypted, "Secret Passphrase");
+    }
+    time1 = (new Date()).getTime();
+
+    vm.rc4 = (time1 - time0) / 20;
+
+  }
+
+})();
+
+</script>
+</head>
+<body ng-app="testencryption">
+  <div ng-controller="AppController as app">
+    <p>Time for AES: {{ app.aestime }}ms</p>
+    <p>Time for Rabbit: {{ app.rabbittime }}ms</p>
+    <p>Time for TEA: {{ app.teatime }}ms</p>
+    <p>Time for RC4: {{ app.rc4 }}ms</p>
+  </div>
+</body>
+</html>
