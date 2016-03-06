@@ -57,7 +57,72 @@
 
     vm.rc4 = (time1 - time0) / 20;
 
+	encrypted = stringToUtf8(message);
+    time0 = (new Date()).getTime();
+    for(var i = 0; i < 20; i++) {
+      decrypted = deobfuscate(message);
+    }
+    time1 = (new Date()).getTime();
+
+    vm.obfuscate = (time1 - time0) / 20;
   }
+
+  function stringToUtf8(str) {
+    var result = [];
+    var length = str.length
+    for (var i = 0; i < length; i++) {
+	    result[i] = str.charCodeAt(i);
+    }
+    return result;
+  }
+
+  function deobfuscate(data) {
+    var byteArray = new Uint8Array(data);
+    var previous = 6 * 7;
+    var next;
+
+    for (var i = 0; i < byteArray.byteLength; i++) {
+      next = byteArray[i];
+      byteArray[i] = byteArray[i] - previous;
+      previous = next;
+    }
+
+    return Utf8ArrayToStr(byteArray);
+  }
+
+  function Utf8ArrayToStr(array) {
+      var out, i, len, c;
+      var char2, char3;
+
+      out = "";
+      len = array.length;
+      i = 0;
+      while(i < len) {
+        c = array[i++];
+        switch(c >> 4)
+        {
+          case 0: case 1: case 2: case 3: case 4: case 5: case 6: case 7:
+            // 0xxxxxxx
+            out += String.fromCharCode(c);
+            break;
+          case 12: case 13:
+            // 110x xxxx   10xx xxxx
+            char2 = array[i++];
+            out += String.fromCharCode(((c & 0x1F) << 6) | (char2 & 0x3F));
+            break;
+          case 14:
+            // 1110 xxxx  10xx xxxx  10xx xxxx
+            char2 = array[i++];
+            char3 = array[i++];
+            out += String.fromCharCode(((c & 0x0F) << 12) |
+                           ((char2 & 0x3F) << 6) |
+                           ((char3 & 0x3F) << 0));
+            break;
+        }
+      }
+
+      return out;
+    }
 
 })();
 
@@ -69,6 +134,7 @@
     <p>Time for Rabbit: {{ app.rabbittime }}ms</p>
     <p>Time for TEA: {{ app.teatime }}ms</p>
     <p>Time for RC4: {{ app.rc4 }}ms</p>
+    <p>Time for our algorithm: {{ app.obfuscate }}ms</p>
   </div>
 </body>
 </html>
